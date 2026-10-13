@@ -1,6 +1,5 @@
-# Script de instalacion de 1 solo comando para Come Sano (Soporta repos privados con Token)
 param(
-    [string]$Repo = "",
+    [string]$Repo = "Folis455/ComeSano",
     [string]$Token = ""
 )
 
@@ -21,9 +20,9 @@ Write-Host "[1/4] Preparando carpeta en el sistema..." -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
 # 2. Descargar paquete
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 if ($Repo -and $Token) {
-    Write-Host "[2/4] Descargando aplicacion desde repositorio privado..." -ForegroundColor Cyan
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Write-Host "[2/4] Descargando desde repositorio privado..." -ForegroundColor Cyan
     $apiUrl = "https://api.github.com/repos/$Repo/contents/ComeSano-bundle.zip"
     $headers = @{
         "Authorization" = "Bearer $Token"
@@ -31,6 +30,14 @@ if ($Repo -and $Token) {
         "User-Agent"    = "PowerShell-Installer"
     }
     Invoke-WebRequest -Uri $apiUrl -Headers $headers -OutFile $tempZip -UseBasicParsing
+
+    Write-Host "[3/4] Descomprimiendo archivos..." -ForegroundColor Cyan
+    Expand-Archive -Path $tempZip -DestinationPath $installDir -Force
+    Remove-Item $tempZip -Force
+} elseif ($Repo) {
+    Write-Host "[2/4] Descargando aplicacion..." -ForegroundColor Cyan
+    $rawUrl = "https://raw.githubusercontent.com/$Repo/main/ComeSano-bundle.zip"
+    Invoke-WebRequest -Uri $rawUrl -OutFile $tempZip -UseBasicParsing
 
     Write-Host "[3/4] Descomprimiendo archivos..." -ForegroundColor Cyan
     Expand-Archive -Path $tempZip -DestinationPath $installDir -Force
